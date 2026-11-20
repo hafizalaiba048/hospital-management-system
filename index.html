@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Shifa Hospital - Management System</title>
+<style>
+body{font-family:Arial;background:#eef6ff;margin:0;text-align:center}
+.header{background:#0066cc;color:white;padding:20px}
+.header h1{margin:0}
+.stats{display:flex;justify-content:center;gap:15px;flex-wrap:wrap;margin:15px}
+.box{background:white;padding:15px 25px;border-radius:15px;box-shadow:0 4px 10px #ccc}
+.box b{font-size:22px;color:#0066cc}
+.form{background:white;max-width:800px;margin:15px auto;padding:20px;border-radius:15px;box-shadow:0 4px 10px #ccc}
+input,select{padding:10px;margin:5px;border-radius:10px;border:1px solid #ccc;width:180px}
+button{background:#0066cc;color:white;border:none;padding:10px 18px;border-radius:20px;cursor:pointer;margin:3px}
+.del{background:#cc0000}
+.card{background:white;width:320px;display:inline-block;margin:10px;border-radius:15px;box-shadow:0 4px 10px #ccc;padding:12px;text-align:left;vertical-align:top}
+.bill{background:white;max-width:650px;margin:20px auto;padding:20px;border-radius:15px;box-shadow:0 4px 10px #ccc;text-align:left}
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1>🏥 SHIFA HOSPITAL</h1>
+<p>Sargodha | Emergency 24 Hours | OPD • Emergency • Lab</p>
+</div>
+
+<div class="stats">
+<div class="box">Total Patients<br><b id="totalP">0</b></div>
+<div class="box">Admit Patients<br><b id="admitP">0</b></div>
+<div class="box">Total Collection<br><b id="totalMoney">Rs. 0</b></div>
+</div>
+
+<div class="form">
+<h2>➕ Naya Patient Add Karo</h2>
+<input id="pName" placeholder="Patient ka naam">
+<input id="pAge" type="number" placeholder="Age">
+<select id="pDisease">
+<option>Fever</option><option>Flu / Nazla</option><option>Stomach Pain</option>
+<option>Diabetes</option><option>Blood Pressure</option><option>Accident / Injury</option><option>Delivery</option><option>General Checkup</option>
+</select>
+<select id="pDoctor">
+<option>Dr. Ahmed - General</option><option>Dr. Fatima - Child Specialist</option><option>Dr. Ali - Surgeon</option><option>Dr. Ayesha - Gynae</option>
+</select>
+<select id="pRoom">
+<option>OPD - Sirf Checkup</option><option>General Ward - Rs.1000/day</option><option>Private Room - Rs.3000/day</option><option>ICU - Rs.8000/day</option>
+</select>
+<br>
+<label><input type="checkbox" value="500" class="srv"> Blood Test - Rs.500</label>
+<label><input type="checkbox" value="1500" class="srv"> X-Ray - Rs.1500</label>
+<label><input type="checkbox" value="3000" class="srv"> Ultrasound - Rs.3000</label>
+<label><input type="checkbox" value="800" class="srv"> ECG - Rs.800</label>
+<label><input type="checkbox" value="2000" class="srv"> Medicine - Rs.2000</label>
+<br><br>
+<button onclick="addPatient()">Patient Admit Karo</button>
+</div>
+
+<div class="form">
+<h2>🔍 Patient Dhoondo</h2>
+<input id="search" onkeyup="showPatients()" placeholder="Naam likh ke dhoondo..." style="width:300px">
+</div>
+
+<h2>📋 Patients List</h2>
+<div id="patientList"></div>
+
+<div class="bill">
+<h2 style="text-align:center">🧾 Aaj Ka Total Bill / Collection</h2>
+<div id="billList">Abhi koi patient nahi hai</div>
+<h3 id="grandTotal">Grand Total: Rs. 0</h3>
+<button onclick="clearAll()" style="background:#555">Sara Record Saaf Karo</button>
+</div>
+
+<script>
+let patients = [
+{name:"Laiba", age:20, disease:"Fever", doctor:"Dr. Ahmed - General", room:"OPD - Sirf Checkup", bill:500},
+{name:"Ayesha", age:22, disease:"Flu / Nazla", doctor:"Dr. Fatima - Child Specialist", room:"General Ward - Rs.1000/day", bill:2000},
+];
+let totalCollection = 2500;
+
+function getRoomPrice(room){
+  if(room.includes("1000")) return 1000;
+  if(room.includes("3000")) return 3000;
+  if(room.includes("8000")) return 8000;
+  return 500;
+}
+function addPatient(){
+  let n = document.getElementById("pName").value;
+  let a = document.getElementById("pAge").value;
+  if(!n || !a){ alert("Naam aur Age to likho!"); return; }
+  let disease = document.getElementById("pDisease").value;
+  let doctor = document.getElementById("pDoctor").value;
+  let room = document.getElementById("pRoom").value;
+  let bill = getRoomPrice(room);
+  document.querySelectorAll(".srv:checked").forEach(c=>{ bill += Number(c.value); });
+  document.querySelectorAll(".srv").forEach(c=>c.checked=false);
+  patients.push({name:n, age:a, disease, doctor, room, bill});
+  totalCollection += bill;
+  document.getElementById("pName").value=""; document.getElementById("pAge").value="";
+  showPatients();
+  alert(n + " Admit Ho Gaya! Bill: Rs. " + bill);
+}
+function deletePatient(i){
+  if(confirm("Is patient ko Discharge / Delete kar dun?")){
+    totalCollection -= patients[i].bill;
+    patients.splice(i,1); showPatients();
+  }
+}
+function showPatients(){
+  let s = document.getElementById("search").value.toLowerCase();
+  let html=""; let grand=0;
+  patients.forEach((p,i)=>{
+    if(!p.name.toLowerCase().includes(s)) return;
+    grand += p.bill;
+    html+=`<div class="card">
+    <h3>👤 ${p.name} (${p.age} saal)</h3>
+    <p><b>Bimari:</b> ${p.disease}</p>
+    <p><b>Doctor:</b> ${p.doctor}</p>
+    <p><b>Room:</b> ${p.room}</p>
+    <p style="color:#0066cc;font-weight:bold;font-size:18px">Bill: Rs. ${p.bill}</p>
+    <button onclick="discharge(${i})">✅ Discharge</button>
+    <button class="del" onclick="deletePatient(${i})">Delete ❌</button>
+    </div>`;
+  });
+  if(!html) html="<p>Koi patient nahi mila</p>";
+  document.getElementById("patientList").innerHTML=html;
+  document.getElementById("billList").innerHTML=html.replace(/<button.*?<\/button>/g,"");
+  document.getElementById("totalP").innerText=patients.length;
+  document.getElementById("admitP").innerText=patients.length;
+  document.getElementById("totalMoney").innerText="Rs. "+totalCollection;
+  document.getElementById("grandTotal").innerText="Grand Total: Rs. "+totalCollection;
+}
+function discharge(i){
+  alert(patients[i].name + " ko Discharge kar diya!\nFinal Bill: Rs. " + patients[i].bill);
+  deletePatient(i);
+}
+function clearAll(){ if(confirm("Sara record saaf kar dun?")){ patients=[]; totalCollection=0; showPatients(); } }
+showPatients();
+</script>
+</body>
+</html>
